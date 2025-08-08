@@ -1,10 +1,61 @@
 # Pipeman
 
+**Pipeman** is a type-safe, event-driven pipeline framework for Dart that makes it easy to compose and run complex data-processing flows — from simple transformations to fully concurrent, multi-stage jobs.
+
 [![style: very good analysis][very_good_analysis_badge]][very_good_analysis_link]
 [![Powered by Mason](https://img.shields.io/endpoint?url=https%3A%2F%2Ftinyurl.com%2Fmason-badge)](https://github.com/felangel/mason)
 [![License: MIT][license_badge]][license_link]
 
-A dart package to handle long and multistep tasks that require various pipelines and need concurrency.
+---
+
+## ✨ Features
+
+- **Strongly-typed chaining** – each `Pipe<I, O>` enforces matching input/output types at compile-time.
+- **Composable stages** – attach single pipes, multiple pipes, or even other pipelines.
+- **Event visibility** – unified stream of `queued`, `skipped`, `processing`, `success`, and `failed` events from every stage.
+- **Sync or async transforms** – works equally well for CPU-bound or I/O-bound stages.
+- **Concurrency control** – with `Pump`, feed the pipeline jobs at a controlled rate and process multiple items in parallel.
+- **Gauged branching** – dynamically choose the next pipe based on live data.
+
+---
+
+## 🚀 Quick Start
+
+````dart
+import 'package:pipeman/pipeman.dart';
+
+void main() async {
+  final pipeline = Pipeline<String, String>(id: 'root', maxConcurrent: 20)
+    .attach(FunctionPipe<String, int>(id: 'len', fn: (s) => s.length))
+    .attach(FunctionPipe<int, double>(id: 'half', fn: (n) => n / 2))
+    .gauged((current) {
+      if (current < 5) {
+        return FunctionPipe<double, String>(
+          id: 'short',
+          fn: (n) => 'short $n',
+        );
+      }
+      return FunctionPipe<double, String>(
+        id: 'long',
+        fn: (n) => 'long $n',
+      );
+    });
+
+  // Listen to all stage events
+  pipeline.events.listen((event) {
+    print('${event.pipeId}: ${event.type} ${event.progress ?? ''}');
+  });
+
+  // Run a batch at once
+  final results = await pipeline.runAll(['hello', 'world']);
+  print(results); // ["short 2.5", "short 2.5"]
+
+  // Or run with concurrency control
+  final pump = Pump(pipeline, maxConcurrent: 4);
+  pump.feed('hello');
+  pump.feed('world');
+  await pump.close();
+}
 
 ## Installation 💻
 
@@ -14,7 +65,7 @@ Install via `dart pub add`:
 
 ```sh
 dart pub add pipeman
-```
+````
 
 ---
 
