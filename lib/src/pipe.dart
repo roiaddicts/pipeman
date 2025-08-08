@@ -7,7 +7,7 @@ typedef PipeFunction<I, O> = FutureOr<O> Function(I input);
 abstract class Pipe<I, O> {
   Pipe(this.id);
   final String id;
-  final StreamController<PipeEvent<O>> _events = StreamController.broadcast();
+  final StreamController<PipeEvent<O>> _events = StreamController();
 
   Stream<PipeEvent<O>> get stream => _events.stream;
 
@@ -16,11 +16,17 @@ abstract class Pipe<I, O> {
 
   /// Called internally by the pipeline
   Future<O> run(I input) async {
-    emit(PipeEvent(pipeId: id, type: PipeEventType.queued, progress: 0));
+    _emit(
+      PipeEvent(
+        pipeId: id,
+        type: PipeEventType.queued,
+        progress: 0,
+      ),
+    );
 
     try {
       final result = await execute(input);
-      emit(
+      _emit(
         PipeEvent(
           pipeId: id,
           type: PipeEventType.success,
@@ -30,7 +36,7 @@ abstract class Pipe<I, O> {
       );
       return result;
     } catch (e) {
-      emit(
+      _emit(
         PipeEvent(
           pipeId: id,
           type: PipeEventType.failed,
@@ -48,7 +54,7 @@ abstract class Pipe<I, O> {
       throw ArgumentError('Progress must be between 0.0 and 1.0');
     }
 
-    emit(
+    _emit(
       PipeEvent(
         pipeId: id,
         type: PipeEventType.processing,
@@ -57,7 +63,7 @@ abstract class Pipe<I, O> {
     );
   }
 
-  void emit(PipeEvent<O> event) => _events.add(event);
+  void _emit(PipeEvent<O> event) => _events.add(event);
 }
 
 class FunctionPipe<I, O> extends Pipe<I, O> {

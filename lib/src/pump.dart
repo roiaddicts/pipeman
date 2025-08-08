@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
 
-import 'package:pipeman/src/pipeline.dart';
+import 'package:pipeman/pipeman.dart';
 
 class Pump<I, O> {
   Pump(
