@@ -21,7 +21,7 @@
 
 ## 🚀 Quick Start
 
-````dart
+```dart
 import 'package:pipeman/pipeman.dart';
 
 void main() async {
@@ -56,6 +56,9 @@ void main() async {
   pump.feed('world');
   await pump.close();
 }
+```
+
+---
 
 ## Installation 💻
 
@@ -65,7 +68,7 @@ Install via `dart pub add`:
 
 ```sh
 dart pub add pipeman
-````
+```
 
 ---
 
